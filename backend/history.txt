@@ -1,0 +1,5 @@
+1) npm init
+2) npm i socket.io express cors
+3) cerate server
+4) create start script for nodemon
+

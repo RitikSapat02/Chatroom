@@ -1,0 +1,173 @@
+1) npx create-react-app chat
+2) add m0 p0 in index.css
+3) add cdn links of bootstrap to html
+4) create a div in app.js give class "container-fluid bg-light text-dark d-flex align-items-center justify-content-center" container-fluid :- full width container
+bg-light :- bg light grey
+flex box prperties :- d-flex,align-items-center,justify-content-center
+5) Build routes 
+ - npm i react-router-dom
+ - import { BrowserRouter as Router, Routes, Route} from 'react-router-dom'
+ - use Router -> routes >route as
+   <Router>
+        <Routes>
+          <Route></Route>
+          <Route></Route>
+          <Route></Route>
+        </Routes>
+    </Router>
+6) create component folder in src. create mainForm component
+ - create div and then inside that create a form and in that create fields for name and selection list / drop down list create button for submit
+
+ - for storing name and room ,create state for both combinly as a object create function assign to both input as onchange.in that function use stateupdating function to update state
+
+ - handle error by creating state for them. create validation function to check for any validation errors. on form add onSubmit and addign it a function for that create a function "handlesubmit" and in that write event.preventDefault() to stop form from getting submit automatically. and then take a variable to check if all validation have been passed. if it is valid then navigate user to the selected gaming room. for that we use useNavigate from react-router-dom. import it and make an object of it. add condition in form after the button that if error exist then it will show that error in small tag.
+
+ if valid then navigate using this
+  navigate(`/chat/${data.room}`,{state:data}); //route specify karo aur uss route pe navigate hoga with state data. so route pe iss state ke data ke sath jaega. state me hame koi bhi react state bhejni padti hai
+
+7) create chatroom component
+    here you created 1 container with 50% width shadowed etc etcand then in that container you made 3 divs .in first div it a heading. in second div we made a chat container with 475 something height. in that we made row temporary rows one from sender and other from receiver. first one gets to align at end. and second one to align at start. then 3rd div is form with input element and a submit button.
+
+    import chatroom in app.js
+    use that in app.js for any path of any room
+
+8) replace dummy data with actual real time data
+ i) import useLocation hook. useLocation Returns the current location object, which represents the current URL in web browsers.
+  create object of useLocation
+
+ ii)create a state with useState and this useEffect will do something like whenver the location  changes it will store location.state means the state which we are passing from mainform by using state updating function in useEffect.whatever we pass to navigate in mainform this state will be availale in location.state so using this we will update that.
+
+ replace dummy gaming room by {data?.room} means if data present then data.room
+
+ note:- here we are using submit svg by bootsrap icon
+
+9) add handlechange function to message input and make a state variable for that input and in handlechange update the state.
+
+10)now create on submit function in onsubmit crteate a new message with name time and msg state.once we use msg state then update it with empty string.name is data.name means the state which we got from our mainform state. create a state for all messages with empty array. message created in this function we add this message to the all messages using state updating function.
+
+11) now to show messages,in our returend html we are looping through all messages with the help of map and for each message we are outputting some html code with message.name message.time and message.msg (msg is a state remember the input text by user and message is a representation of name time and msg combinely). now to show time we are using from-now from react-moment. it tells from what time( kitna der pahle) this message was sent.like a few minute ago,1 hour ago,1 year ago etc.
+so npm i react-moment, moment (you have to install this dependency also. ye react-moment ke sathcombinely kaam karta hai)
+import Moment from "react-moment";
+and then use    <Moment fromNow>{msg.time}</Moment> to show time
+
+12) now connect froned to the socket
+
+  i)npm i socket.io-client 
+   (ye hamara messages recieve and send karne ke liye frontend side ka module hai jaise backet me hamne socket.io use kiya tha)
+  
+  ii) now initialize the socket server
+   import it :- import {io} from "socket.io-client";
+   initilize socket:- ham chahte hai ki bass jab pahli baar render ho tabhi ye code work kare so we are using useEffect with empty dependies. we are initializing socket in there
+
+   const socket = io("http://localhost:8000/");
+
+   here we are giving localhost path of backend
+
+   now hamara client ka ek instance ban gaya hai to ab ham socket ka jo instance hai usee messaging bhejna start karenge.
+
+   to uske liye ham kya karenge ki - ham jab connection create karte hai matlab abhi backend aur frontend pe dono jagah socket ban gaya hai to ab ham backend se connection shuru karenge aur frontend se connection create karenge dono ka dekhenge ki waha connection ban raha hai ki nahi
+
+   so add 
+
+   backend:- after server created   
+   io.on("connection",(socket)=>{
+      console.log(socket.id);
+  })
+
+  frontend:- chatroom.js
+  socket.on("connect",()=>{
+      console.log(socket.id);
+    });
+
+    to connection established ho gaya i.e connection ban gaya frontend aur backend me
+
+  to ab mesage ko bhejne ke liye ham "emit" use karte hai aur get karne ke liye "on" use karte hai. to agar ham kuch frontend se bhej rahe hai to frontend se 'emit' karenge aur agar backend me uss msg ko get karna hai to 'on' pe listen karnege aur agar backend se bhejnna hai to backend se emit karenge aur frontend pe 'on' pe get karenge.
+
+  agar hame socket me room create karna hai to uske liye hame kya karna padta hai ki agar hamara 2 ya 3 room hai to agar ham ussi grp me msg bhejna chahte hai to jo user hamara jis room se belong karta hai ham usko uss room me join kara dete hai aur baad me jo bhi message waha bhejenge wo usme dekhega. vo uss room ke message dekh bhi payega aur bhej bhi payega.
+
+  note:- jo id console hora hai vo user ka id console ho ra he.
+
+
+  //user ko join kardenge room me
+  socket.emit("joinRoom",data.room);  
+
+  matlab  joinroom me jao. ab isko bnackend me get karenge ON se
+
+  socket.on("joinRoom", (room) => socket.join(room));     //"joinRoom" iss me same name likhana jo bhi frontend ke emit me likhoge. room matlab jo data pass hua i.e data.room. . socket.join se user join hojaega
+
+
+  //messages bhejenge
+  to ab jab bhi user koi message bhejega to ham direct socket me bhejenge. to onSubmit me ab messages me set karne ki jarurat nahi hai ham direct socket ke pass message bhej denge
+
+    const onSubmit = () => {
+    if (msg) {
+      //jab msg typed hoga tabhi ye run hoga
+      const newMessage = { time: new Date(), msg, name: data.name };
+      setMsg("");
+      socket.emit("newMessage", {newMessage, room:data.room}); //hamne room bhi bhej diya hai jisse samjega kis room me bhejna hai
+    }
+    };
+
+  hamne socket useEffect me banaya hai to ab hame wo onSubmit me accessible nahi hoga to ham ek state bana dete hai socket ka so that it can be accessed there too.
+
+  Note:- * means updated line
+
+  const [socket, setSocket] = useState();
+
+   useEffect(() => {
+    const socket = io("http://localhost:8000/"); //created instance
+ *   setSocket(socket); //updated
+
+    socket.on("connect", () => {
+      console.log(socket.id);
+
+      socket.emit("joinRoom", location.state.room);
+    });
+  }, []);
+
+  now listen on backend:
+
+   socket.on("newMessage", ({ newMessage, room }) => {
+    console.log(room, newMessage);
+
+    //send to all clients in room
+    io.in(room).emit("getLatestMessage", newMessage);
+  });
+
+  hamne message liya hai basically jab bhi koi user send karge kisi room me to wo socket pe bhejega backend pe and aur backend se ham sare user jo bhi usme connected hai room se usko bhej denge to uske liye hamne yaha se send karne ke liye io.in use kiya usme room pass kiya aur emit kardiya
+   now hame wo froend end me get karna padega to uske liye ye hai:-
+
+    useEffect(()=>{
+    if(socket){
+      socket.on("getLatestMessage", (newMessage) => {
+        setMessages([...allMessages, newMessage]);
+      });
+    }
+  },[socket,allMessages]);
+
+    to hamne fronend pe listen kiya aur jaise hi aya to hamne kya kiya ki messages me add kardiya uss user ke liye to ab hame messages visible honge
+
+
+13) to ab vo automattic scroll nahi hora to uske liye ham ek div add karnege in chatroom before that submit button. hamne ref lagaya hai waha "msgBoxRef". to ab ham iss div ko kya karnege ki jaise hi koi msg bhejega to ye div  ko scroll kara ke hight pe le jaega kaha? sare msg render hone ke baad
+
+useref se initilize kar denge :-  const msgBoxRef = useRef();
+
+now ham kya karnge ki koi message ane ke badd vo add hota hai allmessages me vaha ham apna logic likhenge
+
+ if (socket) {
+      socket.on("getLatestMessage", (newMessage) => {
+        setMessages([...allMessages, newMessage]);
+ **     msgBoxRef.current.scrollIntoView({ behaviour: "smooth" });
+      });
+    }
+
+to hamne useref use kiya sabse pahle useref se msgBoxRef banaliya aur uske ref me msgBoxRef daal diya. ab kya hoga jab bhi naya msg ayega state set karega aur uske baad jo msgBox hai uska scroll kardega view me
+
+Now enter dabane ke baad bhi hame send karna hai to uske liye submit button me 
+
+const handleEnter = (e) => e.keyCode === 13 ? onSubmit():"";
+<input ...onKeyDown={handleKeyDown}>
+
+to agar keycode 13 hai matlab ENTER press hua hai means send kar do (call kardo onsubmit ko)
+
+
