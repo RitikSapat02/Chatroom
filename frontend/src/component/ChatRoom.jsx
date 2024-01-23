@@ -13,7 +13,7 @@ const ChatRoom = () => {
   const [allMessages, setMessages] = useState([]);
 
   useEffect(() => {
-    const socket = io("http://localhost:8000/"); //created instance
+    const socket = io("https://chatroom-server-orpin.vercel.app/"); //created instance
     setSocket(socket);
 
     socket.on("connect", () => {
